@@ -7,43 +7,64 @@ import {
   StyleSheet,
 } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
+import GestureRecognizer from 'react-native-swipe-gestures';
 
 export default class Home extends Component {
   constructor() {
     super();
     this.state = {
       name: '',
+      user: '',
+      gestureName: 'none',
     };
+  }
+  async componentDidMount() {
+    const user = await AsyncStorage.getItem('@name');
+    await this.setState({ user: user });
+  }
+  saveName = async () => {
+    if (this.state.name === '') {
+      alert('Please Enter Your name')
+    } else if(this.state.user === ''){
+      await AsyncStorage.setItem('@name', this.state.name);
+    this.props.navigation.navigate('EventHome');
     }
-    async componentDidMount() {
-        const user = await AsyncStorage.getItem('@name')
-        if (user) {
-            this.props.navigation.navigate('EventHome')
-        } else {
-            alert('please enter your name')
-        }
-    }
-  saveName=async()=> {
-      
-      await AsyncStorage.setItem('@name', this.state.name)
-      alert(this.state.name)
-      this.props.navigation.navigate('EventHome')
+  };
+
+  onSwipeLeft(gestureState) {
+    this.props.navigation.navigate('EventTrack');
+  }
+
+  onSwipeRight(gestureState) {
+    this.props.navigation.goBack();
   }
   render() {
+    const config = {
+      velocityThreshold: 0.3,
+      directionalOffsetThreshold: 80,
+    };
     return (
       <View style={styles.container}>
-        <ImageBackground
-          source={require('../assets/bg.jpg')}
-          style={styles.imageBackground}>
-          <TextInput
-            style={styles.input}
-            onChangeText={text => this.setState({name: text})}
-            placeholder="Enter Your Name"
-          />
-          <Text style={styles.button} onPress={() => this.saveName()}>
-            Submit
-          </Text>
-        </ImageBackground>
+        <GestureRecognizer
+          onSwipeLeft={state => this.onSwipeLeft(state)}
+          onSwipeRight={state => this.onSwipeRight(state)}
+          config={config}
+          style={{
+            flex: 1,
+          }}>
+          <ImageBackground
+            source={require('../assets/bg.jpg')}
+            style={styles.imageBackground}>
+            <TextInput
+              style={styles.input}
+              onChangeText={text => this.setState({name: text})}
+              placeholder="Enter Your Name"
+            />
+            <Text style={styles.button} onPress={() => this.saveName()}>
+              Submit
+            </Text>
+          </ImageBackground>
+        </GestureRecognizer>
       </View>
     );
   }
